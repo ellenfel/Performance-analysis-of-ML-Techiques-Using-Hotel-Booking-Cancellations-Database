@@ -1,3 +1,5 @@
+# DATA ACQUISITION
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -72,3 +74,61 @@ arrival_date_week_number, arrival_date_day_of_month,country, meal, adults,
 market_segment, agent, company, required_car_parking_spaces, 
 total_of_special_requests, reservation_status, reservation_status_date
 """
+
+"""
+**Assumptions about cancellation:**
+1. The type of hotel decides the cancelation rate with higher cancellations 
+in city hotels as compared to resort hotels due to variety of facilities 
+available in resort hotels.
+
+2. The earlier the booking made, higher the chances of cancellation.
+
+3. Customers who have bookings for longer durations have lesser chance of 
+cancelling their booking. 
+
+4. As more children or babies are involved in the booking, higher chances of 
+cancellation.
+
+5. Old guest (is_repeated_guest=1) is less likely to cancel current booking.
+
+6. If there are high previous cancellations, possibility of cancellation of 
+current booking is also high.
+
+7. If room assigned is not the same as reserved room type, 
+customer might positively cancel the booking.
+
+8. Higher the number of changes made to the booking, lesser is the chance of 
+cancellation due to the investment of time in curating the booking as per 
+one's requirement.
+
+9. Bookings that are refundable or for which deposits were not made at the 
+time of booking stand a high chance of cancelation.
+
+10. If the number of days in waiting list is significant, customer might make 
+some other booking due to uncertainty of confirmation of current booking.
+"""
+
+"""**Target variable: 
+    is_canceled"""
+    
+    
+# EXPLORATORY DATA ANALYSIS
+
+""" ***UNIVARIATE ANALYSIS (Checking the validity of assumptions)***"""
+    
+is_can = len(df[df['is_canceled']==1])
+print("Percentage cancelation= ", is_can/len(df))
+df['reservation_status'].value_counts(normalize=True)*100
+
+
+# highest positive correlations : lead_time followed by previous_cancellations
+# highest negative correlations : total_of_special_requests, required_car_parking_spaces
+corr= df.corr(method='pearson')['is_canceled'][:]
+corr
+
+ 
+sns.countplot(data=df, x='hotel', hue='is_canceled')
+resort_canceled = df[(df['hotel']=='Resort Hotel') & (df['is_canceled']==1)]
+city_canceled = df[(df['hotel']=='City Hotel') & (df['is_canceled']==1)]
+print('Cancelations in resort hotel= ', (len(resort_canceled))/(len(df[df['hotel']=='Resort Hotel'])))
+print('Cancelations in city hotel= ', (len(city_canceled))/(len(df[df['hotel']=='City Hotel'])))   

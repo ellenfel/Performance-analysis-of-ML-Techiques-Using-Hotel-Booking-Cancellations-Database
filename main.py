@@ -381,26 +381,161 @@ df.drop(['meal', 'assigned_room_type', 'reserved_room_type',
 
 # MODEL AND RESULT
 
+train_var = df.drop(['is_canceled'], axis=1)
+test_var = df['is_canceled']
+X_train, X_test, y_train, y_test = train_test_split(train_var, test_var, test_size=0.20)
+X_train.shape, y_train.shape, X_test.shape, y_test.shape
 
 
+#Data scaling
+std_scaler = StandardScaler()
+std_scaler.fit(X_train)
+X_train_std = std_scaler.transform(X_train)
+X_test_std = std_scaler.transform(X_test)
+
+mm_scaler = MinMaxScaler()
+mm_scaler.fit(X_train)
+X_train_mm = mm_scaler.transform(X_train)
+X_test_mm = mm_scaler.transform(X_test)
 
 
+#Logistic Regression
+logreg = LogisticRegression(max_iter=500).fit(X_train_mm, y_train)
+scores = cross_val_score(logreg, X_train_mm, y_train, cv=5)
+logreg_pred = logreg.predict(X_test_mm)
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(logreg.score(X_test_mm, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, logreg_pred)))
+print(confusion_matrix(y_test, logreg_pred))
 
 
+#SGD Classifier
+sgd = SGDClassifier(alpha=0.1).fit(X_train_std, y_train)
+scores = cross_val_score(sgd, X_train_std, y_train, cv=5)
+sgd_pred = sgd.predict(X_test_std)
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(sgd.score(X_test_std, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, sgd_pred)))
+print(confusion_matrix(y_test, sgd_pred))
 
 
+#Ridge Classifier
+rc = RidgeClassifier(alpha=1, normalize=True)
+rc.fit(X_train, y_train)
+scores = cross_val_score(rc, X_train, y_train, cv=5)
+rc_pred = rc.predict(X_test)
+print("Normalized data:")
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(rc.score(X_test, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, rc_pred)))
+print(confusion_matrix(y_test, rc_pred))
+
+rc = RidgeClassifier(alpha=1)
+rc.fit(X_train_std, y_train)
+scores = cross_val_score(rc, X_train_std, y_train, cv=5)
+rc_pred = rc.predict(X_test_std)
+print("Standard scaled data:")
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(rc.score(X_test_std, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, rc_pred)))
+print(confusion_matrix(y_test, rc_pred))
 
 
+#KNN
+training_accuracy = []
+test_accuracy = []
+neighbors_settings = range(1, 6)
+for n_neighbors in neighbors_settings:
+    knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+    knn.fit(X_train, y_train)
+    training_accuracy.append(knn.score(X_train, y_train))
+    test_accuracy.append(knn.score(X_test, y_test))
+    
+plt.plot(neighbors_settings, training_accuracy, label="training accuracy")
+plt.plot(neighbors_settings, test_accuracy, label="test accuracy")
+plt.ylabel("Accuracy")
+plt.xlabel("n_neighbors")
+plt.legend()
+
+knn = KNeighborsClassifier(n_neighbors=3).fit(X_train, y_train)
+scores = cross_val_score(knn, X_train, y_train, cv=5)
+knn_pred = knn.predict(X_test)
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(knn.score(X_test, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, knn_pred)))
+print(confusion_matrix(y_test, knn_pred))
 
 
+#Decision Tree
+tree = DecisionTreeClassifier(max_depth=1).fit(X_train, y_train)
+scores = cross_val_score(tree, X_train, y_train, cv=5)
+tree_pred = tree.predict(X_test)
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(tree.score(X_test, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, tree_pred)))
+print(confusion_matrix(y_test, tree_pred))
 
 
+def classifier(train, test, estimator, param_grid):
+    grid_search = GridSearchCV(estimator, param_grid, cv=5)
+    grid_search.fit(train, y_train)
+    print("Best parameters:", grid_search.best_params_)
+    print("Best score:", grid_search.best_score_)
+    print("Test score: {:.3f}".format(grid_search.score(test, y_test)))
+
+def feature_selection(model):
+    select_features = SelectFromModel(estimator=model, threshold='median')
+    select_features.fit(X_train, y_train)
+    X_train_select = select_features.transform(X_train)
+    X_test_select = select_features.transform(X_test)
+    return X_train_select, X_test_select
+
+def run_model(model, model_feature, param_grid):
+    print("Before feature selection:")
+    classifier(X_train, X_test, model, param_grid)
+    X_train_select, X_test_select = feature_selection(model_feature)
+    print("After feature selection")
+    classifier(X_train_select, X_test_select, model, param_grid)
 
 
+#Random Forest
+param_grid = {'n_estimators':[50,75,100], 'max_depth':[1,2,5]}
+run_model(RandomForestClassifier(), RandomForestClassifier(n_estimators=50, 
+                                                           max_depth=2), param_grid)
+
+#Gradient Boosted Classifier
+param_grid = {'max_depth':[1,2,5], 'learning_rate':[1,0.1,0.001]}
+run_model(GradientBoostingClassifier(), 
+          GradientBoostingClassifier(learning_rate=0.001), param_grid)
 
 
+#Naive Bayes
+gnb = GaussianNB()
+gnb.fit(X_train, y_train)
+scores = cross_val_score(gnb, X_train, y_train, cv=5)
+gnb_pred = gnb.predict(X_test)
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(gnb.score(X_test, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, gnb_pred)))
+print(confusion_matrix(y_test, gnb_pred))
 
 
+#Multi Layer Perceptron
+mlp = MLPClassifier(hidden_layer_sizes=[35, 20], alpha=0.001, solver='adam', activation='relu')
+mlp.fit(X_train_std, y_train)
+mlp_pred = mlp.predict(X_test_std)
+print("Train score: {:.3f}".format(mlp.score(X_train_std, y_train)))
+print("Test accuracy: {:.3f}".format(mlp.score(X_test_std, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, mlp_pred)))
+print(confusion_matrix(y_test, mlp_pred))
 
 
-
+#Adaboost Classifier
+ada = AdaBoostClassifier()
+ada.fit(X_train, y_train)
+ada_pred = ada.predict(X_test)
+scores = cross_val_score(ada, X_train, y_train, cv=5)
+print("Average cross validation score: {:.3f}".format(scores.mean()))
+print("Test accuracy: {:.3f}".format(ada.score(X_test, y_test)))
+print("F1 score: {:.3f}".format(f1_score(y_test, ada_pred)))
+print(confusion_matrix(y_test, ada_pred))

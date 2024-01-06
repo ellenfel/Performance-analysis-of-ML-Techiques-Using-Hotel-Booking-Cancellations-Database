@@ -112,6 +112,7 @@ some other booking due to uncertainty of confirmation of current booking.
     is_canceled"""
     
     
+    
 # EXPLORATORY DATA ANALYSIS
 
 """ ***UNIVARIATE ANALYSIS (Checking the validity of assumptions)***"""
@@ -126,6 +127,7 @@ df['reservation_status'].value_counts(normalize=True)*100
 corr= df.corr(method='pearson')['is_canceled'][:]
 corr
  
+df.insert(2,"is_cancelled_str",df['is_canceled'].astype(str)) # for hue
 
 #df['is_canceled'] = df['is_canceled'].astype(str)
 sns.countplot(data=df, x='hotel', hue='is_canceled')
@@ -189,6 +191,149 @@ temp['is_canceled'].value_counts(normalize=True)*100
  different from reserved room type is not valid. There are only 5% 
  cancellations in such a case.
 """
+
+
+sns.pointplot(data=df, x='booking_changes', y='is_canceled')
+"""Assumption 8 about the bookings does not hold as there is no trend in 
+ it's impact on the cancellation of bookings."""
+ 
+ 
+sns.countplot(x="deposit_type", hue="is_cancelled_str",data=df);
+"""Contrary to assumption 9, bookings that are non_refundable are canceled."""
+
+
+sns.relplot(data=df, x='days_in_waiting_list', y='is_canceled', kind='line', estimator=None)
+"""No relation can be established between days_in_waiting_list and is_canceled.
+ Therefore, we will take this feature for further analysis. Assumption 10 can 
+ be discarded."""
+
+
+#df['is_canceled_str']= df['is_canceled'].astype(str)
+sns.countplot(data=df, x='arrival_date_year', hue='is_canceled_str')
+
+chart = sns.catplot(data=df, x='arrival_date_month', hue='is_canceled_str', kind='count')
+chart.set_xticklabels(rotation=65, horizontalalignment='right')
+"""Maximum bookings occur in 2016 in the months of July and August."""
+
+year_count = df.groupby(['arrival_date_year', 'is_canceled']).size().to_frame(name='count')
+year_perct = year_count.groupby(level=0).apply(lambda x:100 * x / float(x.sum()))
+print(year_perct)
+
+month_count = df.groupby(['arrival_date_month', 'is_canceled']).size().to_frame(name='count')
+month_perct = month_count.groupby(level=0).apply(lambda x:100 * x / float(x.sum()))
+print(month_perct)
+"""Percentage of cancellations was higher in 2015 and 2017 despite higher 
+number of bookings in 2016. April and June had the largest 
+cancellations overall."""
+
+
+chart = sns.catplot(data=df, x='market_segment', kind='count', hue='is_canceled_str')
+chart.set_xticklabels(rotation=65, horizontalalignment='right')
+
+sns.countplot(data=df, x='distribution_channel', hue='is_canceled_str')
+
+print(df['customer_type'].value_counts(normalize=True)*100)
+sns.countplot(data=df, x='customer_type', hue='is_canceled_str')
+
+"""75% bookings occur in Transient category of customers. It also sees the
+ highest cancellation among all the categories."""
+
+df['reservation_status'].unique()
+
+grid = sns.FacetGrid(df, col='arrival_date_year')
+grid.map(sns.countplot, 'hotel')
+"""In all three years city hotels saw more bookings than resort hotels."""
+
+
+df['meal'].nunique(), df['customer_type'].nunique()
+grid = sns.FacetGrid(df, col='customer_type')
+grid.map(sns.countplot, 'meal')
+"""All kinds of customers prefer BB type meals majorly."""
+
+
+df.pivot_table(columns='hotel', values='country', aggfunc=lambda x:x.mode())
+"""People from country with ISO code 'PRT' made the most number of bookings in 
+ both types of hotels."""
+
+
+g = sns.countplot(data=df, x='hotel', hue='reserved_room_type')
+g.legend(loc='center left', bbox_to_anchor=(1.25, 0.5), ncol=1)
+"""Resort hotels room preference : A, D, E
+ City hotels room preference : A, D, F"""
+
+
+print("TABLE 1")
+print(df.groupby(['hotel', 'customer_type']).size())
+"""For each kind of hotel, Transient type of customers are the highest followed
+ by Transient Party. Group bookings are the least."""
+
+
+print(df.groupby(['customer_type', 'deposit_type']).size())
+"""Each category of customers book hotels without deposit. Surprisingly, 
+ between refundable and non-refundable type, higher number of people book 
+ hotels that are non-refundable."""
+
+
+print(df.groupby(['customer_type', 'distribution_channel']).size())
+print("-"*60)
+print(df.groupby(['customer_type', 'market_segment']).size())
+
+print(df.groupby(['hotel', 'distribution_channel']).size())
+print("-"*40)
+print(df.groupby(['hotel', 'market_segment']).size())
+
+"""Combining table 1 and above table, we see the relation between freqeunt 
+ customer types at each hotel and their mode of booking. This information can 
+ be used by the hotel to focus on customised publicity stratgies. Similarly the
+ market segments can be analysed for a more customer centric approach.  
+ Hotel type with distribution channel and market segment can also be analysed. """
+ 
+group = df.groupby(['customer_type', 'reservation_status']).size()
+group_pcts = group.groupby(level=0).apply(lambda x:100 * x / float(x.sum()))
+group_pcts
+
+df.pivot_table(columns='hotel', values=['stays_in_weekend_nights', 
+                            'stays_in_week_nights'], aggfunc=lambda x:x.sum())
+
+df.pivot_table(columns='hotel', values='total_of_special_requests', aggfunc=lambda x:x.sum())
+
+sns.catplot(data=df, x='hotel', y='days_in_waiting_list', jitter=False, 
+            palette=sns.color_palette(['blue', 'orange']))
+"""As it is seen, city hotels have much larger waiting time in days compared 
+ to resort hotels which may signify that their demad is higher."""
+ 
+
+df['country'].value_counts(normalize=True)*100
+temp = df.loc[(df['country']=='PRT') | (df['country']=='GBR') 
+              | (df['country']=='FRA') | (df['country']=='ESP') 
+              | (df['country']=='DEU')]
+grid = sns.FacetGrid(temp, col='country')
+grid.map(sns.countplot, 'distribution_channel')
+"""Using this information hotels can implement models of publicity for getting 
+ more bookings in the top 5 countries from where most of their customers hail."""
+ 
+ 
+sns.barplot(data=df, x='customer_type', y='total_of_special_requests', ci=None)
+sns.boxplot(data=df, x='distribution_channel', y='lead_time')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -127,10 +127,10 @@ df['reservation_status'].value_counts(normalize=True)*100
 corr= df.corr(method='pearson')['is_canceled'][:]
 corr
  
-df.insert(2,"is_cancelled_str",df['is_canceled'].astype(str)) # for hue
+df.insert(2,"is_canceled_str",df['is_canceled'].astype(str)) # for hue
 
 #df['is_canceled'] = df['is_canceled'].astype(str)
-sns.countplot(data=df, x='hotel', hue='is_canceled')
+sns.countplot(data=df, x='hotel', hue='is_canceled_str')
 resort_canceled = df[(df['hotel']=='Resort Hotel') & (df['is_canceled']==1)]
 city_canceled = df[(df['hotel']=='City Hotel') & (df['is_canceled']==1)]
 print('Cancelations in resort hotel= ', (len(resort_canceled))/(len(df[df['hotel']=='Resort Hotel'])))
@@ -164,7 +164,7 @@ print(len(df[(df['stays_in_weekend_nights']==0) & (df['stays_in_week_nights']==0
  Assumption 4 can be discarded."""
 
 
-sns.countplot(data=df, x='is_repeated_guest', hue='is_canceled')
+sns.countplot(data=df, x='is_repeated_guest', hue='is_canceled_str')
 
 new_guest = df[(df['is_repeated_guest']==0) & (df['is_canceled']==1)]
 old_guest = df[(df['is_repeated_guest']==1) & (df['is_canceled']==1)]
@@ -176,7 +176,7 @@ print('Cancelations among old guests= ', (len(old_guest))/(len(df[df['is_repeate
  Assumption 5 holds true."""
 
 
-sns.countplot(data=df, x='previous_cancellations', hue='is_canceled')
+sns.countplot(data=df, x='previous_cancellations', hue='is_canceled_str')
 """Maximum customers have 0 previous cancellations. They are less likely to
  cancel the current booking. However, customers who have cancelled once 
  earlier are more likely to cancel the current booking. This also matches with
@@ -198,7 +198,7 @@ sns.pointplot(data=df, x='booking_changes', y='is_canceled')
  it's impact on the cancellation of bookings."""
  
  
-sns.countplot(x="deposit_type", hue="is_cancelled_str",data=df);
+sns.countplot(x="deposit_type", hue="is_canceled_str",data=df);
 """Contrary to assumption 9, bookings that are non_refundable are canceled."""
 
 
@@ -420,7 +420,7 @@ print(confusion_matrix(y_test, sgd_pred))
 
 
 #Ridge Classifier
-rc = RidgeClassifier(alpha=1, normalize=True)
+rc = RidgeClassifier(alpha=1)
 rc.fit(X_train, y_train)
 scores = cross_val_score(rc, X_train, y_train, cv=5)
 rc_pred = rc.predict(X_test)
@@ -535,7 +535,7 @@ ada = AdaBoostClassifier()
 ada.fit(X_train, y_train)
 ada_pred = ada.predict(X_test)
 scores = cross_val_score(ada, X_train, y_train, cv=5)
-print("Average cross validation score: {:.3f}".format(scores.mean()))
-print("Test accuracy: {:.3f}".format(ada.score(X_test, y_test)))
-print("F1 score: {:.3f}".format(f1_score(y_test, ada_pred)))
+print("Average cross validation score: {:.8f}".format(scores.mean()))
+print("Test accuracy: {:.8f}".format(ada.score(X_test, y_test)))
+print("F1 score: {:.8f}".format(f1_score(y_test, ada_pred)))
 print(confusion_matrix(y_test, ada_pred))

@@ -318,14 +318,68 @@ sns.boxplot(data=df, x='distribution_channel', y='lead_time')
 
 
 
+# FEATURE ENGINEERING
+
+month_map = {'January':'01', 'February':'02', 'March':'03', 'April':'04', 
+             'May':'05', 'June':'06', 'July':'07', 'August':'08', 
+             'September':'09', 'October':'10', 'November':'11', 'December':'12'}
+df.arrival_date_month = df.arrival_date_month.map(month_map).astype(int)
+
+df['arrival_date'] = df['arrival_date_year'].astype(str)+'-'+df['arrival_date_month'].astype(str)+'-'+df['arrival_date_day_of_month'].astype(str)
+
+def roomChange(row):
+    if row['assigned_room_type'] == row['reserved_room_type']:
+        return False
+    else:
+        return True
+
+df['change_in_room'] = df.apply(roomChange, axis=1)
+
+df['children'] = df['children'].fillna(0)
+df['offspring'] = (df['children'] + df['babies']).astype(int)
+
+df['total_bookings'] = df['previous_cancellations'] + df['previous_bookings_not_canceled']
+
+df['country'].fillna(df['country'].mode()[0], inplace=True)
+df['agent'].fillna(df['agent'].mode()[0], inplace=True)
+df['company'].fillna(df['company'].mode()[0], inplace=True)
+
+for i in range(len(df)):
+    if df.loc[i, 'country'] == 'PRT':
+        df.at[i, 'country'] = 1
+    elif df.loc[i, 'country'] == 'GBR':
+        df.at[i, 'country'] = 2
+    else:
+        df.at[i, 'country'] = 0
+
+df['reservation_status_date'] = pd.to_datetime(df['reservation_status_date'])
+df['arrival_date'] = pd.to_datetime(df['arrival_date'])
+
+df['stay_duration'] = df['reservation_status_date'] - df['arrival_date']
+df['stay_duration'] = df['stay_duration'] / np.timedelta64(1, 'D')
+df['stay_duration'] = df['stay_duration'].astype(int)
+
+for i in range(len(df)):
+    if df.loc[i, 'stay_duration']<0:
+        df.at[i, 'stay_duration'] = -1
+
+lb = LabelEncoder()
+var = ['hotel', 'customer_type', 'deposit_type', 'change_in_room', 
+       'market_segment', 'distribution_channel', 'country']
+
+for item in var:
+    df[item] = lb.fit_transform(df[item])
+df = pd.get_dummies(df, columns=['hotel', 'customer_type', 'deposit_type', 
+                                 'change_in_room', 'market_segment', 
+                                 'distribution_channel', 'country'])
+
+df.drop(['meal', 'assigned_room_type', 'reserved_room_type', 
+         'reservation_status', 'reservation_status_date', 'arrival_date'], 
+        axis=1, inplace=True)
 
 
 
-
-
-
-
-
+# MODEL AND RESULT
 
 
 

@@ -125,10 +125,83 @@ df['reservation_status'].value_counts(normalize=True)*100
 # highest negative correlations : total_of_special_requests, required_car_parking_spaces
 corr= df.corr(method='pearson')['is_canceled'][:]
 corr
-
  
+
+#df['is_canceled'] = df['is_canceled'].astype(str)
 sns.countplot(data=df, x='hotel', hue='is_canceled')
 resort_canceled = df[(df['hotel']=='Resort Hotel') & (df['is_canceled']==1)]
 city_canceled = df[(df['hotel']=='City Hotel') & (df['is_canceled']==1)]
 print('Cancelations in resort hotel= ', (len(resort_canceled))/(len(df[df['hotel']=='Resort Hotel'])))
-print('Cancelations in city hotel= ', (len(city_canceled))/(len(df[df['hotel']=='City Hotel'])))   
+print('Cancelations in city hotel= ', (len(city_canceled))/(len(df[df['hotel']=='City Hotel'])))  
+#Our 1st assumption, city hotels have higher cancelation rate than resort hotels, is valid.
+# what is coralation?
+# cant quite make heads and tails of the above code block
+
+
+grid = sns.FacetGrid(df, col='is_canceled')
+grid.map(plt.hist, 'lead_time', width=50)
+grid.add_legend()
+"""
+Maximum cancelations occur if the booking is made 60-70 days before the checkin 
+ date. Longer the lead_time, lower is the cancelation. This invalidates our 
+ 2nd assumption. 
+"""
+
+
+print(len(df[(df['stays_in_weekend_nights']==0) & (df['stays_in_week_nights']==0)])) 
+#715
+"""715 bookings don't have both weekday or weekend nights which could be an 
+ error in the data as this is not possible in real life scenario. Therefore 
+ these rows can be eliminated from the dataset."""
+
+
+((len(df.loc[(df['children']!=0) | (df['babies']!=0)]))/(len(df))) * 100
+"""The number of customers having children or babies or both are only 8% of the
+ total population. Therefore this information can be ignored as it will not play 
+ a significatn role in deciding whether to cancel the booking or not. 
+ Assumption 4 can be discarded."""
+
+
+sns.countplot(data=df, x='is_repeated_guest', hue='is_canceled')
+
+new_guest = df[(df['is_repeated_guest']==0) & (df['is_canceled']==1)]
+old_guest = df[(df['is_repeated_guest']==1) & (df['is_canceled']==1)]
+print('Cancelations among new guests= ', (len(new_guest))/(len(df[df['is_repeated_guest']==0])))
+print('Cancelations among old guests= ', (len(old_guest))/(len(df[df['is_repeated_guest']==1])))
+"""As seen in the correlation table, the above graph bolsters the evidence that
+ maximum customers are new comers and they are less likely to cancel their 
+ current booking. Old guests are less likely to cancel the booking (14%).
+ Assumption 5 holds true."""
+
+
+sns.countplot(data=df, x='previous_cancellations', hue='is_canceled')
+"""Maximum customers have 0 previous cancellations. They are less likely to
+ cancel the current booking. However, customers who have cancelled once 
+ earlier are more likely to cancel the current booking. This also matches with
+ the positive correlation between previous_cancellations and is_cancelled and
+ supports Assumption 6.
+"""
+
+
+temp = df.loc[df['reserved_room_type']!=df['assigned_room_type']]
+temp['is_canceled'].value_counts(normalize=True)*100
+"""Assumption 7 that there more cancellations when assigned room type is 
+ different from reserved room type is not valid. There are only 5% 
+ cancellations in such a case.
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

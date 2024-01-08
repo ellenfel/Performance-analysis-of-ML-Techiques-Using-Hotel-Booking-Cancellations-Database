@@ -185,11 +185,11 @@ min_max_transformed_data = pd.DataFrame.from_records(min_max_transformed_data)
 
 #input_dataframe = min_max_transformed_data
 
-input_dataframe = num_df_norm
+#input_dataframe = num_df_norm
 
 #input_dataframe = sqrt_transformed_data
 
-#input_dataframe = num_df
+input_dataframe = num_df
 
 
 X = pd.concat([cat_df, input_dataframe], axis = 1)
@@ -374,7 +374,7 @@ print(f"Classification Report : \n{clf_report}")
 
 
 
-models_sqrt_root = pd.DataFrame({
+models_normalized = pd.DataFrame({
     'Model' : ['Logistic Regression', 'KNN', 'Decision Tree Classifier', 'Random Forest Classifier','Ada Boost Classifier',
              'Gradient Boosting Classifier', 'XgBoost', 'Cat Boost', 'Extra Trees Classifier', 'LGBM'],
     'Score' : [acc_lr, acc_knn, acc_dtc, acc_rd_clf, acc_ada, acc_gb, acc_xgb, acc_cat, acc_etc, acc_lgbm]
@@ -385,10 +385,10 @@ models_sqrt_root = pd.DataFrame({
 
 
 #
-
+"""
 models.sort_values(by = 'Score', ascending = False)
 px.bar(data_frame = models, x = 'Score', y = 'Model', color = 'Score', template = 'plotly_dark', title = 'Models Comparison')
-
+"""
 
 
 

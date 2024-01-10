@@ -220,7 +220,7 @@ scaler.fit(X_train)
 scaled_X_train= scaler.transform(X_train)
 scaled_X_test= scaler.transform(X_test)
 
-lr = LogisticRegression()
+lr = LogisticRegression(penalty="l2",dual=False)
 lr.fit(scaled_X_train, y_train)
 
 y_pred_lr = lr.predict(scaled_X_test)
@@ -235,7 +235,7 @@ print(f"Classification Report : \n{clf_report}")
 
 
 #KNN
-knn = KNeighborsClassifier()
+knn = KNeighborsClassifier(n_neighbors=5)
 knn.fit(X_train, y_train)
 
 y_pred_knn = knn.predict(X_test)
@@ -250,7 +250,7 @@ print(f"Classification Report : \n{clf_report}")
 
 
 #Decision Tree Classifier
-dtc = DecisionTreeClassifier()
+dtc = DecisionTreeClassifier(criterion="gini", splitter="best")
 dtc.fit(X_train, y_train)
 
 y_pred_dtc = dtc.predict(X_test)
@@ -265,7 +265,7 @@ print(f"Classification Report : \n{clf_report}")
 
 
 #Random Forest Classifier
-rd_clf = RandomForestClassifier()
+rd_clf = RandomForestClassifier(n_estimators=150,criterion="gini")
 rd_clf.fit(X_train, y_train)
 
 y_pred_rd_clf = rd_clf.predict(X_test)
@@ -308,6 +308,7 @@ print(f"Accuracy Score of Ada Boost Classifier is : {acc_gb}")
 print(f"Confusion Matrix : \n{conf}")
 print(f"Classification Report : \n{clf_report}")
 
+
 #XgBoost Classifier
 xgb = XGBClassifier(booster = 'gbtree', learning_rate = 0.1, max_depth = 5, n_estimators = 180)
 xgb.fit(X_train, y_train)
@@ -336,8 +337,6 @@ clf_report = classification_report(y_test, y_pred_cat)
 print(f"Accuracy Score of Ada Boost Classifier is : {acc_cat}")
 print(f"Confusion Matrix : \n{conf}")
 print(f"Classification Report : \n{clf_report}")
-
-
 
 
 #ExtraTreesClassifier
@@ -389,21 +388,6 @@ models_normalized = pd.DataFrame({
 models.sort_values(by = 'Score', ascending = False)
 px.bar(data_frame = models, x = 'Score', y = 'Model', color = 'Score', template = 'plotly_dark', title = 'Models Comparison')
 """
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

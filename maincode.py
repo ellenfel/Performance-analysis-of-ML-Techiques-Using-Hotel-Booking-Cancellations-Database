@@ -2,7 +2,7 @@
 """
 Created on Fri Feb 16 12:21:09 2018
 
-@author: Dinesh
+@author: me
 """
 ''' I searched for a month and weekday sort function to do certain work as part of my project work.
 I did get only sort function which sorts months and weekdays by alphabetical order but I need them in chronological 

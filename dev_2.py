@@ -80,12 +80,6 @@ final_hotel
 
 plt.figure(figsize = (24, 12))
 
-corr = df.corr()
-sns.heatmap(corr, annot = True, linewidths = 1)
-plt.show()
-
-correlation = df.corr()['is_canceled'].abs().sort_values(ascending = False)
-correlation
 
 # dropping columns that are not useful
 
